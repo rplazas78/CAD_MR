@@ -4,65 +4,363 @@ $Revision : $
 $Author   : CAD      
 $Modtime  : $       
 $History  : $   Metodo de Reposicion (MR)   
+SET SERVEROUTPUT ON;
+SELECT FN_EJECUTAR_REGLA_DINAMICA('PRELIM_01',1,2,2025,113, 21) as R FROM DUAL
+SELECT FN_EJECUTAR_REGLA_DINAMICA('PRELIM_04',1,2,2025,115,NULL,NULL,5,5) as FONDO FROM DUAL
+**********************************************************************/  
+
+CREATE OR REPLACE FUNCTION FN_EJECUTAR_REGLA_DINAMICA (
+    p_codigo_actividad          VARCHAR2,					-- Codigo de Actividad PRELIM_01
+    p_tipo_actividad			NUMBER,						-- 0:Otro , 1: Comercial , 2: Residencial
+	p_tipo_presupuesto          NUMBER, 					-- 1:presupuesto es independiente, 2: presupuesto predominante
+    p_vigencia                  NUMBER,						-- vigencia
+    p_armazon                   NUMBER,         			-- parametro
+    p_area_uso                  NUMBER 		DEFAULT NULL,	-- parametro
+	p_area_total_construida     NUMBER 		DEFAULT NULL,	-- parametro
+	p_frente               		NUMBER 		DEFAULT NULL,	-- parametro
+    p_fondo                		NUMBER 		DEFAULT NULL,	-- parametro
+	p_grupo_uso_cantidades      NUMBER 		DEFAULT NULL,   -- parametro	
+    p_pisos_acabados            NUMBER 		DEFAULT NULL,   -- parametro
+    p_area_tipo_unidad_uso      NUMBER 		DEFAULT NULL,   -- parametro
+    p_n_unidades_uso_principal  NUMBER   	DEFAULT NULL,   -- parametro
+    p_n_pisos                   NUMBER   	DEFAULT NULL,   -- parametro
+    p_codigo_uso                VARCHAR2 	DEFAULT NULL,   -- parametro
+    p_n_sotanos                 NUMBER   	DEFAULT NULL,   -- parametro
+    p_n_baños                   NUMBER   	DEFAULT NULL,   -- parametro
+    p_n_cocinas                 NUMBER   	DEFAULT NULL,   -- parametro
+    p_n_espacios                NUMBER   	DEFAULT NULL,   -- parametro
+    p_m_muros                   NUMBER   	DEFAULT NULL,   -- parametro
+    p_codigo_estrato            NUMBER   	DEFAULT NULL,   -- parametro
+    p_cubierta_muros_acabados   NUMBER   	DEFAULT NULL,   -- parametro
+    p_fachada_acabados          NUMBER   	DEFAULT NULL,   -- parametro
+    p_mobiliario_baño           NUMBER   	DEFAULT NULL,   -- parametro
+    p_mobiliario_cocina         NUMBER   	DEFAULT NULL    -- parametro
+	
+) RETURN NUMBER
+IS
+    v_formula                   VARCHAR2(4000);
+    v_condicion                 VARCHAR2(4000);
+    v_resultado                 NUMBER;
+    v_sql                       CLOB;
+    -----
+    v_area_uso                  NUMBER;
+    v_area_total_construida     NUMBER; 
+    v_frente                    NUMBER;
+    v_fondo                     NUMBER;
+	v_grupo_uso_cantidades      NUMBER;
+BEGIN
+
+
+    -- Obtener fórmula y condición desde la tabla
+    SELECT T.FORMULA, T.CONDICION
+    INTO v_formula, v_condicion
+    FROM MR_TB_REGLA_PRELIMINAR T
+    WHERE T.ID_ACTIVIDAD_OBRA = p_codigo_actividad AND TIPO_ACTIVIDAD = p_tipo_actividad
+    AND T.TIPO_PRESUPUESTO = p_tipo_presupuesto AND T.VIGENCIA = p_vigencia
+	AND ROWNUM = 1;
+
+    -- Mostrar valores de entrada
+    DBMS_OUTPUT.PUT_LINE('--- VARIABLES DE ENTRADA (1) ---');
+    DBMS_OUTPUT.PUT_LINE('p_codigo_actividad: ' || p_codigo_actividad);
+    DBMS_OUTPUT.PUT_LINE('p_tipo_actividad: ' || p_tipo_actividad);
+    DBMS_OUTPUT.PUT_LINE('p_tipo_presupuesto: ' || p_tipo_presupuesto);
+    DBMS_OUTPUT.PUT_LINE('p_vigencia: ' || p_vigencia);
+    DBMS_OUTPUT.PUT_LINE('p_armazon: ' || p_armazon);
+    DBMS_OUTPUT.PUT_LINE('p_area_uso: ' || p_area_uso);
+    DBMS_OUTPUT.PUT_LINE('p_area_total_construida: ' || p_area_total_construida);
+    DBMS_OUTPUT.PUT_LINE('p_frente: ' || p_frente);
+    DBMS_OUTPUT.PUT_LINE('p_fondo: ' || p_fondo);
+    DBMS_OUTPUT.PUT_LINE('p_grupo_uso_cantidades: ' || p_grupo_uso_cantidades);
+    DBMS_OUTPUT.PUT_LINE('p_pisos_acabados: ' || p_pisos_acabados);
+    DBMS_OUTPUT.PUT_LINE('p_area_tipo_unidad_uso: ' || p_area_tipo_unidad_uso);
+    DBMS_OUTPUT.PUT_LINE('p_n_unidades_uso_principal: ' || p_n_unidades_uso_principal);
+    DBMS_OUTPUT.PUT_LINE('p_n_pisos: ' || p_n_pisos);
+    DBMS_OUTPUT.PUT_LINE('p_codigo_uso: ' || p_codigo_uso);
+    DBMS_OUTPUT.PUT_LINE('p_n_sotanos: ' || p_n_sotanos);
+    DBMS_OUTPUT.PUT_LINE('p_n_baños: ' || p_n_baños);
+    DBMS_OUTPUT.PUT_LINE('p_n_cocinas: ' || p_n_cocinas);
+    DBMS_OUTPUT.PUT_LINE('p_n_espacios: ' || p_n_espacios);
+    DBMS_OUTPUT.PUT_LINE('p_m_muros: ' || p_m_muros);
+    DBMS_OUTPUT.PUT_LINE('p_codigo_estrato: ' || p_codigo_estrato);
+    DBMS_OUTPUT.PUT_LINE('p_cubierta_muros_acabados: ' || p_cubierta_muros_acabados);
+    DBMS_OUTPUT.PUT_LINE('p_fachada_acabados: ' || p_fachada_acabados);
+    DBMS_OUTPUT.PUT_LINE('p_mobiliario_baño: ' || p_mobiliario_baño);
+    DBMS_OUTPUT.PUT_LINE('p_mobiliario_cocina: ' || p_mobiliario_cocina);
+    
+    --DBMS_OUTPUT.PUT_LINE('--- VARIABLES DE ENTRADA (2) ---');
+    /*
+	IF p_codigo_actividad IN ('PRELIM_01', 'PRELIM_02', 'PRELIM_12')  THEN
+        IF p_tipo_presupuesto = 1 THEN
+            v_area_uso := p_valor;
+            DBMS_OUTPUT.PUT_LINE('AREA_USO = ' || v_area_uso);
+        ELSIF p_tipo_presupuesto = 2 THEN
+            v_area_total_construida := p_valor;
+            DBMS_OUTPUT.PUT_LINE('AREA_TOTAL_CONSTRUIDA = ' || v_area_total_construida);
+        END IF;
+    END IF;
+	*/
+
+    ---DBMS_OUTPUT.PUT_LINE('FRENTE             = ' || p_frente);
+    ---DBMS_OUTPUT.PUT_LINE('FONDO              = ' || p_fondo);
+
+    -- Mostrar fórmula y condición
+    DBMS_OUTPUT.PUT_LINE('--- CONDICIÓN Y FÓRMULA ---');
+    DBMS_OUTPUT.PUT_LINE('Condición: ' || v_condicion);
+    DBMS_OUTPUT.PUT_LINE('Fórmula  : ' || v_formula);
+
+    -- Construcción del bloque dinámico
+    v_sql := '
+        DECLARE
+            ARMAZON_ESTRUCTURA          NUMBER := :1;
+            AREA_USO                    NUMBER := :2;
+            AREA_TOTAL_CONSTRUIDA       NUMBER := :3;
+			FRENTE                    	NUMBER := :4;
+            FONDO                     	NUMBER := :5;
+            GRUPO_USO_CANTIDADES        NUMBER := :6;
+            PISOS_ACABADOS              NUMBER := :7;   
+            AREA_TIPO_UNIDAD_USO        NUMBER := :8;
+            N_UNIDADES_USO_PRINCIPAL    NUMBER := :9;
+            N_PISOS                     NUMBER := :10;
+            CODIGO_USO                  VARCHAR2(3) := :11;
+            N_SOTANOS                   NUMBER := :12;       
+            N_BAÑOS                     NUMBER := :13;
+            N_COCINAS                   NUMBER := :14;
+            N_ESPACIOS                  NUMBER := :15;
+            MUROS_ESTRUCTURA            NUMBER := :16;
+            CODIGO_ESTRATO              NUMBER := :17;
+            CUBIERTA_MUROS_ACABADOS     NUMBER := :18;
+            FACHADA_ACABADOS            NUMBER := :19;
+            MOBILIARIO_BAÑO             NUMBER := :20;
+            MOBILIARIO_COCINA           NUMBER := :21;
+			
+        BEGIN
+            IF ' || v_condicion || ' THEN
+                RESULTADO := ' || v_formula || ';
+            ELSE
+                RESULTADO := NULL;
+            END IF;
+            :5000 := RESULTADO;
+        END;';
+
+    -- Mostrar bloque generado
+    DBMS_OUTPUT.PUT_LINE('--- BLOQUE PL/SQL GENERADO ---');
+    DBMS_OUTPUT.PUT_LINE(v_sql);
+
+    -- Ejecutar el bloque
+    EXECUTE IMMEDIATE v_sql
+    USING p_armazon, p_area_uso, p_area_total_construida, p_frente, p_fondo, p_grupo_uso_cantidades, p_pisos_acabados, 
+     p_area_tipo_unidad_uso, p_n_unidades_uso_principal, p_n_pisos, p_codigo_uso, p_n_sotanos, p_n_baños, p_n_cocinas, p_n_espacios,
+     p_m_muros, p_codigo_estrato, p_cubierta_muros_acabados, p_fachada_acabados, p_mobiliario_baño, p_mobiliario_cocina, 
+     OUT v_resultado;
+
+
+    -- Mostrar resultado
+    DBMS_OUTPUT.PUT_LINE('--- RESULTADO FINAL ---');
+    DBMS_OUTPUT.PUT_LINE('Resultado: ' || NVL(TO_CHAR(v_resultado), 'NULL'));
+
+    RETURN v_resultado;
+
+EXCEPTION
+    WHEN OTHERS THEN
+        DBMS_OUTPUT.PUT_LINE('Error al evaluar: ' || SQLERRM);
+        RETURN NULL;
+END;
+/
+
+/**********************************************************************      
+$Archive  : FN_TOTAL_COSTOS_FICHA.sql
+$Revision : $      
+$Author   : CAD      
+$Modtime  : $       
+$History  : $   Metodo de Reposicion (MR)   
 SELECT FN_TOTAL_COSTOS_FICHA(115, 'PRESUPUESTO RESIDENCIAL', 2025, 'HMEN_01') AS TOTAL FROM DUAL;
+SELECT FN_TOTAL_COSTOS_FICHA(115, 'PRESUPUESTO COMERCIAL', 2025, 'HMEN_01') AS TOTAL FROM DUAL;
+
+SELECT NVL(FN_TOTAL_COSTOS_FICHA(NULL,1,1,'2026',115,15,0,10,11,0,0,30,25,10,'055'),0) AS CANTIDAD_OBRA FROM DUAL;
+SELECT NVL(FN_TOTAL_COSTOS_FICHA(NULL,2,1,'2026',115,15,0,10,11,0,0,30,25,10,'055'),0) AS CANTIDAD_OBRA FROM DUAL;
+
+
 **********************************************************************/  
 CREATE OR REPLACE FUNCTION FN_TOTAL_COSTOS_FICHA 
 (
-    p_codigo_ficha     IN NUMBER,
-    p_tipo_presupuesto IN VARCHAR2,  -- 'PRESUPUESTO RESIDENCIAL' o 'PRESUPUESTO COMERCIAL'
-    p_vigencia         IN NUMBER,
-    p_material_ajuste  IN VARCHAR2   -- 'HMEN_01'
+ 
+    p_codigo_actividad          VARCHAR2,					-- Codigo de Actividad PRELIM_01
+    p_tipo_actividad			NUMBER,						-- 0:Otro , 1: Comercial , 2: Residencial
+	p_tipo_presupuesto          NUMBER, 					-- 1:presupuesto es independiente, 2: presupuesto predominante
+    p_vigencia                  NUMBER,						-- vigencia
+    p_armazon                   NUMBER,         			-- parametro
+    p_area_uso                  NUMBER 		DEFAULT NULL,	-- parametro
+	p_area_total_construida     NUMBER 		DEFAULT NULL,	-- parametro
+	p_frente               		NUMBER 		DEFAULT NULL,	-- parametro
+    p_fondo                		NUMBER 		DEFAULT NULL,	-- parametro
+	p_grupo_uso_cantidades      NUMBER 		DEFAULT NULL,   -- parametro	
+    p_pisos_acabados            NUMBER 		DEFAULT NULL,   -- parametro
+    p_area_tipo_unidad_uso      NUMBER 		DEFAULT NULL,   -- parametro
+    p_n_unidades_uso_principal  NUMBER   	DEFAULT NULL,   -- parametro
+    p_n_pisos                   NUMBER   	DEFAULT NULL,   -- parametro
+    p_codigo_uso                VARCHAR2 	DEFAULT NULL,   -- parametro
+    p_n_sotanos                 NUMBER   	DEFAULT NULL,   -- parametro
+    p_n_baños                   NUMBER   	DEFAULT NULL,   -- parametro
+    p_n_cocinas                 NUMBER   	DEFAULT NULL,   -- parametro
+    p_n_espacios                NUMBER   	DEFAULT NULL,   -- parametro
+    p_m_muros                   NUMBER   	DEFAULT NULL,   -- parametro
+    p_codigo_estrato            NUMBER   	DEFAULT NULL,   -- parametro
+    p_cubierta_muros_acabados   NUMBER   	DEFAULT NULL,   -- parametro
+    p_fachada_acabados          NUMBER   	DEFAULT NULL,   -- parametro
+    p_mobiliario_baño           NUMBER   	DEFAULT NULL,   -- parametro
+    p_mobiliario_cocina         NUMBER   	DEFAULT NULL    -- parametro	
 ) RETURN NUMBER
 IS
-    v_total NUMBER := 0;
+    v_total 					NUMBER := 0;
+	v_material_ajuste   		VARCHAR2(20) :='HMEN_01';   -- 'HMEN_01'
+	
+	
 BEGIN
-    IF p_tipo_presupuesto = 'PRESUPUESTO RESIDENCIAL' THEN
-		SELECT 
-		SUM
-		(
-			CASE 
-				WHEN T.CANT_HMEN IS NOT NULL
-				THEN T.SUBTOTAL + (T.SUBTOTAL * T.CANT_HMEN)
-				ELSE T.SUBTOTAL
-			END
-		) 
-        INTO v_total
-        FROM 
-		(
-            SELECT CF.ID_ACTIVIDAD_OBRA, 
-                   SUM(LM.COSTO_UNITARIO_MATERIAL * AOM.CANTIDAD_MATERIAL) AS SUBTOTAL, 
-                   MAX(CASE WHEN AOM.ID_MATERIAL = P_material_ajuste THEN AOM.CANTIDAD_MATERIAL END) AS CANT_HMEN
-            FROM MR_TB_LISTADO_MATERIAL_MANO_OBRA LM
-            INNER JOIN MR_TB_ACTIVIDAD_OBRA_MATERIAL AOM ON LM.ID_MATERIAL = AOM.ID_MATERIAL
-            INNER JOIN MR_TB_ACT_OBR_COD_FICHA_RES CF ON AOM.ID_ACTIVIDAD_OBRA = CF.ID_ACTIVIDAD_OBRA
-            WHERE CF.CODIGO_FICHA = p_codigo_ficha AND CF.VIGENCIA = p_vigencia
-            --AND CF.ID_ACTIVIDAD_OBRA = 'PRELIM_01'
-            GROUP BY CF.ID_ACTIVIDAD_OBRA
-        ) T;
 
-    ELSIF p_tipo_presupuesto = 'PRESUPUESTO COMERCIAL' THEN
+    IF p_tipo_actividad = 1 THEN --1: COMERCIAL , 2: RESIDENCIAL
+	    
 		SELECT 
-		SUM
+		SUM(TTT.SUBTOTAL_ACT_OBRA)
+		INTO v_total		
+		FROM 
 		(
-			CASE 
-				WHEN T.CANT_HMEN IS NOT NULL
-				THEN T.SUBTOTAL + (T.SUBTOTAL * T.CANT_HMEN)
-				ELSE T.SUBTOTAL
-			END
-		) 
-        INTO v_total
-        FROM 
+			SELECT 
+			TT.CAPITULO_OBRA, 
+			TT.ID_ACTIVIDAD_OBRA, 
+			SUM
+			(
+				CASE 
+					WHEN TT.CANT_HMEN IS NOT NULL THEN ROUND(TT.SUBTOTAL + (TT.SUBTOTAL * TT.CANT_HMEN),2)
+					ELSE ROUND(TT.SUBTOTAL,2)
+				END
+			) AS COSTO_UNITARIO_ACT_OBRA,
+			SUM 
+			(
+				TT.CANTIDAD_OBRA
+			) AS CANTIDAD_OBRA,
+
+			ROUND
+			(
+				SUM
+				(
+					CASE 
+						WHEN TT.CANT_HMEN IS NOT NULL THEN ROUND(TT.SUBTOTAL + (TT.SUBTOTAL * TT.CANT_HMEN),2)
+						ELSE ROUND(TT.SUBTOTAL,2)
+					END
+				) *
+				SUM 
+				(
+					TT.CANTIDAD_OBRA
+				)
+			,2) AS SUBTOTAL_ACT_OBRA
+			FROM 
+			(
+				SELECT 
+				T.CAPITULO_OBRA, 
+				T.ID_ACTIVIDAD_OBRA, 
+				T.CODIGO_FICHA, 
+				T.SUBTOTAL, 
+				T.CANT_HMEN,
+				FN_EJECUTAR_REGLA_DINAMICA
+				(
+					T.ID_ACTIVIDAD_OBRA,p_tipo_actividad,p_tipo_presupuesto,
+					p_vigencia,p_armazon,p_area_uso,p_area_total_construida,
+					p_frente,p_fondo,p_grupo_uso_cantidades,					   
+					p_pisos_acabados, p_area_tipo_unidad_uso, p_n_unidades_uso_principal,
+					p_n_pisos, p_codigo_uso, p_n_sotanos, p_n_baños, p_n_cocinas, p_n_espacios,
+					p_m_muros, p_codigo_estrato, p_cubierta_muros_acabados, p_fachada_acabados, p_mobiliario_baño, p_mobiliario_cocina
+				) AS CANTIDAD_OBRA
+				FROM 
+				(
+					SELECT AOM.CAPITULO_OBRA,
+						   CF.ID_ACTIVIDAD_OBRA, 
+						   CF.VIGENCIA, 
+						   CF.CODIGO_FICHA,
+						   SUM(LM.COSTO_UNITARIO_MATERIAL * AOM.CANTIDAD_MATERIAL) AS SUBTOTAL, 
+						   MAX(CASE WHEN AOM.ID_MATERIAL = v_material_ajuste THEN AOM.CANTIDAD_MATERIAL END) AS CANT_HMEN
+					FROM MR_TB_LISTADO_MATERIAL_MANO_OBRA LM
+					INNER JOIN MR_TB_ACTIVIDAD_OBRA_MATERIAL AOM ON LM.ID_MATERIAL = AOM.ID_MATERIAL
+					INNER JOIN MR_TB_ACT_OBR_COD_FICHA_COM CF ON AOM.ID_ACTIVIDAD_OBRA = CF.ID_ACTIVIDAD_OBRA
+					WHERE CF.CODIGO_FICHA = p_armazon AND CF.VIGENCIA = p_vigencia
+					--AND CF.ID_ACTIVIDAD_OBRA = 'PRELIM_01'
+					GROUP BY AOM.CAPITULO_OBRA,CF.ID_ACTIVIDAD_OBRA, CF.VIGENCIA, CF.CODIGO_FICHA
+				) T
+			 ) TT
+				GROUP BY  TT.ID_ACTIVIDAD_OBRA,TT.CAPITULO_OBRA
+			) TTT;			
+		
+
+    ELSIF p_tipo_actividad = 2 THEN --1: COMERCIAL , 2: RESIDENCIAL
+
+		SELECT 
+		SUM(TTT.SUBTOTAL_ACT_OBRA)
+		INTO v_total
+		FROM 
 		(
-            SELECT CF.ID_ACTIVIDAD_OBRA, 
-                   SUM(LM.COSTO_UNITARIO_MATERIAL * AOM.CANTIDAD_MATERIAL) AS SUBTOTAL, 
-                   MAX(CASE WHEN AOM.ID_MATERIAL = p_material_ajuste THEN AOM.CANTIDAD_MATERIAL END) AS CANT_HMEN
-            FROM MR_TB_LISTADO_MATERIAL_MANO_OBRA LM
-            INNER JOIN MR_TB_ACTIVIDAD_OBRA_MATERIAL AOM ON LM.ID_MATERIAL = AOM.ID_MATERIAL
-            INNER JOIN MR_TB_ACT_OBR_COD_FICHA_COM CF ON AOM.ID_ACTIVIDAD_OBRA = CF.ID_ACTIVIDAD_OBRA
-            WHERE CF.CODIGO_FICHA = p_codigo_ficha AND CF.VIGENCIA = p_vigencia
-            --AND CF.ID_ACTIVIDAD_OBRA = 'PRELIM_01'
-            GROUP BY CF.ID_ACTIVIDAD_OBRA
-        ) T;
+			SELECT 
+			TT.CAPITULO_OBRA, 
+			TT.ID_ACTIVIDAD_OBRA, 
+			SUM
+			(
+				CASE 
+					WHEN TT.CANT_HMEN IS NOT NULL THEN ROUND(TT.SUBTOTAL + (TT.SUBTOTAL * TT.CANT_HMEN),2)
+					ELSE ROUND(TT.SUBTOTAL,2)
+				END
+			) AS COSTO_UNITARIO_ACT_OBRA,
+			SUM 
+			(
+				TT.CANTIDAD_OBRA
+			) AS CANTIDAD_OBRA,
+
+			ROUND
+			(
+				SUM
+				(
+					CASE 
+						WHEN TT.CANT_HMEN IS NOT NULL THEN ROUND(TT.SUBTOTAL + (TT.SUBTOTAL * TT.CANT_HMEN),2)
+						ELSE ROUND(TT.SUBTOTAL,2)
+					END
+				) *
+				SUM 
+				(
+					TT.CANTIDAD_OBRA
+				)
+			,2) AS SUBTOTAL_ACT_OBRA
+			FROM 
+			(
+				SELECT 
+				T.CAPITULO_OBRA, 
+				T.ID_ACTIVIDAD_OBRA, 
+				T.CODIGO_FICHA, 
+				T.SUBTOTAL, 
+				T.CANT_HMEN,
+				FN_EJECUTAR_REGLA_DINAMICA
+				(
+					T.ID_ACTIVIDAD_OBRA,p_tipo_actividad,p_tipo_presupuesto,
+					p_vigencia,p_armazon,p_area_uso,p_area_total_construida,
+					p_frente,p_fondo,p_grupo_uso_cantidades,					   
+					p_pisos_acabados, p_area_tipo_unidad_uso, p_n_unidades_uso_principal,
+					p_n_pisos, p_codigo_uso, p_n_sotanos, p_n_baños, p_n_cocinas, p_n_espacios,
+					p_m_muros, p_codigo_estrato, p_cubierta_muros_acabados, p_fachada_acabados, p_mobiliario_baño, p_mobiliario_cocina
+				) AS CANTIDAD_OBRA
+				FROM 
+				(
+					SELECT AOM.CAPITULO_OBRA,
+						   CF.ID_ACTIVIDAD_OBRA, 
+						   CF.VIGENCIA, 
+						   CF.CODIGO_FICHA,
+						   SUM(LM.COSTO_UNITARIO_MATERIAL * AOM.CANTIDAD_MATERIAL) AS SUBTOTAL, 
+						   MAX(CASE WHEN AOM.ID_MATERIAL = v_material_ajuste THEN AOM.CANTIDAD_MATERIAL END) AS CANT_HMEN
+					FROM MR_TB_LISTADO_MATERIAL_MANO_OBRA LM
+					INNER JOIN MR_TB_ACTIVIDAD_OBRA_MATERIAL AOM ON LM.ID_MATERIAL = AOM.ID_MATERIAL
+					INNER JOIN MR_TB_ACT_OBR_COD_FICHA_COM CF ON AOM.ID_ACTIVIDAD_OBRA = CF.ID_ACTIVIDAD_OBRA
+					WHERE CF.CODIGO_FICHA = p_armazon AND CF.VIGENCIA = p_vigencia
+					--AND CF.ID_ACTIVIDAD_OBRA = 'PRELIM_01'
+					GROUP BY AOM.CAPITULO_OBRA,CF.ID_ACTIVIDAD_OBRA, CF.VIGENCIA, CF.CODIGO_FICHA
+				) T
+			 ) TT
+				GROUP BY  TT.ID_ACTIVIDAD_OBRA,TT.CAPITULO_OBRA
+			) TTT;	
     END IF;
 
     RETURN ROUND(NVL(v_total, 0), 2);

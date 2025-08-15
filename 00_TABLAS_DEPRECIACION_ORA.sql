@@ -59,6 +59,7 @@ BEGIN
 			GRUPO_USO_PRESUPUESTO 		VARCHAR2(25) NOT NULL,
 			GRUPO_USO_CANTIDAD			NUMBER NULL,
 			VIGENCIA 					NUMBER NULL,
+			GRUPO_CATEGORIA_PROYECTO    NUMBER(1) NOT NULL,
 			CONSTRAINT UK_CODIGO_USO_VIGENCIA UNIQUE (CODIGO_USO, VIGENCIA)
 		) TABLESPACE TS_SIICDAT 
     
@@ -367,4 +368,36 @@ BEGIN
   IF v_count = 0 THEN
     EXECUTE IMMEDIATE 'CREATE INDEX IDX_LISTADO_MATERIAL_ID ON MR_TB_LISTADO_MATERIAL_MANO_OBRA(ID_MATERIAL, VIGENCIA)';
   END IF;
+END;
+/
+
+DECLARE
+    v_table_exists NUMBER := 0;
+BEGIN
+    SELECT COUNT(*)
+    INTO v_table_exists
+    FROM all_tables
+    WHERE table_name = 'MR_TB_REGLA_PRELIMINAR'
+    AND owner = USER;
+
+    IF v_table_exists = 0 THEN
+        EXECUTE IMMEDIATE '
+
+        CREATE TABLE MR_TB_REGLA_PRELIMINAR 
+		(
+			ID_REGLA               NUMBER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+			ID_ACTIVIDAD_OBRA      VARCHAR2(50), 									--Codigo de Actividad PRELIM_01            						
+			TIPO_ACTIVIDAD		   NUMBER,											--0:Otro , 1: Comercial , 2: Residencial 	
+			TIPO_PRESUPUESTO       NUMBER,     										--1:Presupuesto Independiente, 2: Presupuesto Predominante              
+			CONDICION              VARCHAR2(4000),           
+			FORMULA                VARCHAR2(4000),           
+			DESCRIPCION_REGLA      VARCHAR2(1000),           
+			ORDEN_EVALUACION       NUMBER NULL,              
+			VIGENCIA               NUMBER NULL,              
+			ACTIVO                 NUMBER DEFAULT 1          
+		) TABLESPACE TS_SIICDAT 
+       ';
+    
+	   EXECUTE IMMEDIATE 'CREATE INDEX IDX_REGLAS_ESC_VIG_ACT ON MR_TB_REGLA_PRELIMINAR (ID_ACTIVIDAD_OBRA,TIPO_ACTIVIDAD,TIPO_PRESUPUESTO,VIGENCIA,ACTIVO)';	
+	END IF;
 END;
