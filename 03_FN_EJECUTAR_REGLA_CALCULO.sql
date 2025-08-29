@@ -16,7 +16,7 @@ SELECT FN_EJECUTAR_REGLA_CALCULO('AREA_TIPO_UNIDAD_USO',1, 1, NULL, NULL, 120, 2
 SELECT FN_EJECUTAR_REGLA_CALCULO('N_UNIDADES_USO',1, 1, NULL, NULL, 120, 2) AS N_UNIDADES_USO FROM DUAL;
 SELECT FN_EJECUTAR_REGLA_CALCULO('N_ESPACIOS',1, 1, NULL, NULL, 120, 2) AS N_ESPACIOS FROM DUAL;
 SELECT FN_EJECUTAR_REGLA_CALCULO('N_BAÑOS',1, 1, NULL, NULL, 120, 2) AS N_BAÑOS FROM DUAL;
-SELECT FN_EJECUTAR_REGLA_CALCULO('N_COCINAS',1, 1, NULL, NULL, 120, 2) AS N_COCINAS FROM DUAL;
+SELECT FN_EJECUTAR_REGLA_CALCULO('N_COCINAS',1, 1, NULL, NULL, 120, 2,'000') AS N_COCINAS FROM DUAL;
 SELECT FN_EJECUTAR_REGLA_CALCULO('N_PISOS',1, 1, '014', NULL, 120, 2) AS N_PISOS FROM DUAL;
 
 
@@ -30,7 +30,7 @@ SELECT FN_EJECUTAR_REGLA_CALCULO('AREA_TIPO_UNIDAD_USO',2, 1, NULL, NULL, 120, 2
 SELECT FN_EJECUTAR_REGLA_CALCULO('N_UNIDADES_USO',2, 1, NULL, NULL, 120, 2) AS N_UNIDADES_USO FROM DUAL;
 SELECT FN_EJECUTAR_REGLA_CALCULO('N_ESPACIOS',2, 1, NULL, NULL, 120, 2) AS N_ESPACIOS FROM DUAL;
 SELECT FN_EJECUTAR_REGLA_CALCULO('N_BAÑOS',1, 2, NULL, NULL, 120, 2) AS N_BAÑOS FROM DUAL;
-SELECT FN_EJECUTAR_REGLA_CALCULO('N_COCINAS',1, 2, NULL, NULL, 120, 2) AS N_COCINAS FROM DUAL;
+SELECT FN_EJECUTAR_REGLA_CALCULO('N_COCINAS',1, 2, NULL, NULL, 120, 2,'000') AS N_COCINAS FROM DUAL;
 SELECT FN_EJECUTAR_REGLA_CALCULO('N_PISOS',1, 2, '014', NULL, 120, 2) AS N_PISOS FROM DUAL;
 
 **********************************************************************/  
@@ -43,7 +43,8 @@ CREATE OR REPLACE FUNCTION FN_EJECUTAR_REGLA_CALCULO
     p_codigo_uso            	IN VARCHAR2,
     p_codigo_estrato        	IN NUMBER,
     p_area_uso              	IN NUMBER,
-    p_n_pisos               	IN NUMBER DEFAULT 1
+    p_n_pisos               	IN NUMBER DEFAULT 1,
+	p_tamano_cocina            	IN NUMBER DEFAULT 0
 ) RETURN NUMBER
 IS
     v_area_primer_piso        	NUMBER;
@@ -55,48 +56,48 @@ BEGIN
     -- 1. AREA_PRIMER_PISO => 1:PRESUPUESTO INDEPENDIENTE
     IF p_variable = 'AREA_PRIMER_PISO' AND p_tipo_presupuesto = 1 THEN
         IF p_grupo_uso_cantidades IN (1,2,6,7,8,9) THEN
-            RETURN ROUND(p_area_uso / NULLIF(p_n_pisos, 0),2);
+            RETURN ROUND(p_area_uso / NULLIF(p_n_pisos, 0),14);
         ELSE
-            RETURN ROUND(p_area_uso,2);
+            RETURN ROUND(p_area_uso,14);
         END IF;
 
     -- 1. AREA_PRIMER_PISO => 2:PRESUPUESTO PREDOMINANTE
     ELSIF p_variable = 'AREA_PRIMER_PISO' AND p_tipo_presupuesto = 2 THEN
         IF p_grupo_uso_cantidades IN (1,2,6,7,8,9) THEN
-            RETURN ROUND(p_area_uso / NULLIF(p_n_pisos, 0),2);
+            RETURN ROUND(p_area_uso / NULLIF(p_n_pisos, 0),14);
         ELSE
-            RETURN ROUND(p_area_uso,2);
+            RETURN ROUND(p_area_uso,14);
         END IF;
 
     -- 2. FRENTE => 1:PRESUPUESTO INDEPENDIENTE
     ELSIF p_variable = 'FRENTE' AND p_tipo_presupuesto = 1 THEN
         v_area_primer_piso := FN_EJECUTAR_REGLA_CALCULO('AREA_PRIMER_PISO',p_tipo_presupuesto ,p_grupo_uso_cantidades, p_codigo_uso, p_codigo_estrato, p_area_uso, p_n_pisos);
         IF p_grupo_uso_cantidades IN (3,4,5) THEN
-            RETURN ROUND(SQRT(v_area_primer_piso / 2),2);
+            RETURN ROUND(SQRT(v_area_primer_piso / 2),14);
         ELSE
-            RETURN ROUND(SQRT(v_area_primer_piso / 3),2);
+            RETURN ROUND(SQRT(v_area_primer_piso / 3),14);
         END IF;
 
     -- 2. FRENTE => 2:PRESUPUESTO PREDOMINANTE
     ELSIF p_variable = 'FRENTE' AND p_tipo_presupuesto = 2 THEN
         v_area_primer_piso := FN_EJECUTAR_REGLA_CALCULO('AREA_PRIMER_PISO',p_tipo_presupuesto ,p_grupo_uso_cantidades, p_codigo_uso, p_codigo_estrato, p_area_uso, p_n_pisos);
         IF p_grupo_uso_cantidades IN (3,4,5) THEN
-            RETURN ROUND(SQRT(v_area_primer_piso / 2),2);
+            RETURN ROUND(SQRT(v_area_primer_piso / 2),14);
         ELSE
-            RETURN ROUND(SQRT(v_area_primer_piso / 3),2);
+            RETURN ROUND(SQRT(v_area_primer_piso / 3),14);
         END IF;
 
     -- 3. FONDO => 1:PRESUPUESTO INDEPENDIENTE
     ELSIF p_variable = 'FONDO' AND p_tipo_presupuesto = 1 THEN
         v_area_primer_piso := FN_EJECUTAR_REGLA_CALCULO('AREA_PRIMER_PISO',p_tipo_presupuesto ,p_grupo_uso_cantidades, p_codigo_uso, p_codigo_estrato, p_area_uso, p_n_pisos);
         v_frente := FN_EJECUTAR_REGLA_CALCULO('FRENTE',p_tipo_presupuesto, p_grupo_uso_cantidades, p_codigo_uso, p_codigo_estrato, p_area_uso, p_n_pisos);
-        RETURN ROUND(v_area_primer_piso / NULLIF(v_frente, 0),2);
+        RETURN ROUND(v_area_primer_piso / NULLIF(v_frente, 0),14);
 
     -- 3. FONDO => 2:PRESUPUESTO PREDOMINANTE
-    ELSIF p_variable = 'FONDO' AND p_tipo_presupuesto = 1 THEN
+    ELSIF p_variable = 'FONDO' AND p_tipo_presupuesto = 2 THEN
         v_area_primer_piso := FN_EJECUTAR_REGLA_CALCULO('AREA_PRIMER_PISO',p_tipo_presupuesto ,p_grupo_uso_cantidades, p_codigo_uso, p_codigo_estrato, p_area_uso, p_n_pisos);
         v_frente := FN_EJECUTAR_REGLA_CALCULO('FRENTE',p_tipo_presupuesto, p_grupo_uso_cantidades, p_codigo_uso, p_codigo_estrato, p_area_uso, p_n_pisos);
-        RETURN ROUND(v_area_primer_piso / NULLIF(v_frente, 0),2);
+        RETURN ROUND(v_area_primer_piso / NULLIF(v_frente, 0),14);
 
     -- 4. N_UNIDADES_USO_PRINCIPAL => 1:PRESUPUESTO INDEPENDIENTE
     ELSIF p_variable = 'N_UNIDADES_USO_PRINCIPAL' AND p_tipo_presupuesto = 1  THEN
@@ -370,7 +371,7 @@ BEGIN
     ELSIF p_variable = 'N_COCINAS' AND p_tipo_presupuesto = 1  THEN
         IF p_codigo_uso IN ('021','029','030','056','065','017') THEN
             RETURN 1;
-        ELSIF p_codigo_estrato IN (411, 0) OR p_codigo_estrato IS NULL THEN
+        ELSIF p_tamano_cocina IN (411, 0) OR p_tamano_cocina IS NULL THEN
             RETURN 0;
         ELSIF p_area_uso < 500 THEN
             RETURN 1;
@@ -382,7 +383,7 @@ BEGIN
     ELSIF p_variable = 'N_COCINAS' AND p_tipo_presupuesto = 2  THEN
         IF p_codigo_uso IN ('021','029','030','056','065','017') THEN
             RETURN 1;
-        ELSIF p_codigo_estrato IN (411, 0) OR p_codigo_estrato IS NULL THEN
+        ELSIF p_tamano_cocina IN (411, 0) OR p_tamano_cocina IS NULL THEN
             RETURN 0;
         ELSIF p_area_uso < 500 THEN
             RETURN 1;
@@ -390,7 +391,7 @@ BEGIN
             RETURN FN_EJECUTAR_REGLA_CALCULO('N_UNIDADES_USO_PRINCIPAL',p_tipo_presupuesto ,p_grupo_uso_cantidades, p_codigo_uso, p_codigo_estrato, p_area_uso, p_n_pisos);
         END IF;
 
-	-- 10. N_COCINAS => 1:PRESUPUESTO INDEPENDIENTE
+	-- 10. N_PISOS => 1:PRESUPUESTO INDEPENDIENTE
     ELSIF p_variable = 'N_PISOS' AND p_tipo_presupuesto = 1  THEN
 		IF p_n_pisos > 3 AND p_codigo_uso IN ('014', '025', '032', '033', '064', '070', '071', '072', '074', '075', '076') THEN
 			RETURN 1;
@@ -398,7 +399,7 @@ BEGIN
 			RETURN p_n_pisos;
 		END IF;
 
-	-- 10. N_COCINAS => 2:PRESUPUESTO PREDOMINANTE
+	-- 10. N_PISOS => 2:PRESUPUESTO PREDOMINANTE
     ELSIF p_variable = 'N_PISOS' AND p_tipo_presupuesto = 2  THEN
 		IF p_n_pisos > 3 AND p_codigo_uso IN ('014', '025', '032', '033', '064', '070', '071', '072', '074', '075', '076') THEN
 			RETURN 1;

@@ -5,8 +5,9 @@ $Author   : CAD
 $Modtime  : $       
 $History  : $   Metodo de Reposicion (MR)   
 SET SERVEROUTPUT ON;
-SELECT FN_EJECUTAR_REGLA_DINAMICA('PRELIM_01',1,2,2025,113, 21) as R FROM DUAL
-SELECT FN_EJECUTAR_REGLA_DINAMICA('PRELIM_04',1,2,2025,115,NULL,NULL,5,5) as FONDO FROM DUAL
+CLEAR SCREEN;
+SELECT FN_EJECUTAR_REGLA_DINAMICA('PRELIM_01',1,1,2025,113, 21) as R FROM DUAL
+SELECT FN_EJECUTAR_REGLA_DINAMICA('PRELIM_04',1,1,2025,115,NULL,NULL,5,5) as FONDO FROM DUAL
 **********************************************************************/  
 
 CREATE OR REPLACE FUNCTION FN_EJECUTAR_REGLA_DINAMICA (
@@ -34,7 +35,9 @@ CREATE OR REPLACE FUNCTION FN_EJECUTAR_REGLA_DINAMICA (
     p_cubierta_muros_acabados   NUMBER   	DEFAULT NULL,   -- parametro
     p_fachada_acabados          NUMBER   	DEFAULT NULL,   -- parametro
     p_mobiliario_baño           NUMBER   	DEFAULT NULL,   -- parametro
-    p_mobiliario_cocina         NUMBER   	DEFAULT NULL    -- parametro
+    p_mobiliario_cocina         NUMBER   	DEFAULT NULL,   -- parametro
+    p_complemento_industria     NUMBER      DEFAULT NULL,   -- parametro	
+    p_cubierta_estructura       NUMBER      DEFAULT NULL    -- parametro	
 	
 ) RETURN NUMBER
 IS
@@ -86,6 +89,8 @@ BEGIN
     DBMS_OUTPUT.PUT_LINE('p_fachada_acabados: ' || p_fachada_acabados);
     DBMS_OUTPUT.PUT_LINE('p_mobiliario_baño: ' || p_mobiliario_baño);
     DBMS_OUTPUT.PUT_LINE('p_mobiliario_cocina: ' || p_mobiliario_cocina);
+	DBMS_OUTPUT.PUT_LINE('p_complemento_industria: ' || p_complemento_industria);
+	DBMS_OUTPUT.PUT_LINE('p_cubierta_estructura: ' || p_cubierta_estructura);
     
     --DBMS_OUTPUT.PUT_LINE('--- VARIABLES DE ENTRADA (2) ---');
     /*
@@ -132,6 +137,11 @@ BEGIN
             FACHADA_ACABADOS            NUMBER := :19;
             MOBILIARIO_BAÑO             NUMBER := :20;
             MOBILIARIO_COCINA           NUMBER := :21;
+			COMPLEMENTO_INDUSTRIA       NUMBER := :22;
+			CUBIERTA_ESTRUCTURA         NUMBER := :23;
+			
+			
+			RESULTADO                   NUMBER;
 			
         BEGIN
             IF ' || v_condicion || ' THEN
@@ -151,6 +161,7 @@ BEGIN
     USING p_armazon, p_area_uso, p_area_total_construida, p_frente, p_fondo, p_grupo_uso_cantidades, p_pisos_acabados, 
      p_area_tipo_unidad_uso, p_n_unidades_uso_principal, p_n_pisos, p_codigo_uso, p_n_sotanos, p_n_baños, p_n_cocinas, p_n_espacios,
      p_m_muros, p_codigo_estrato, p_cubierta_muros_acabados, p_fachada_acabados, p_mobiliario_baño, p_mobiliario_cocina, 
+	 p_complemento_industria, p_cubierta_estructura,
      OUT v_resultado;
 
 
@@ -176,8 +187,30 @@ $History  : $   Metodo de Reposicion (MR)
 SELECT FN_TOTAL_COSTOS_FICHA(115, 'PRESUPUESTO RESIDENCIAL', 2025, 'HMEN_01') AS TOTAL FROM DUAL;
 SELECT FN_TOTAL_COSTOS_FICHA(115, 'PRESUPUESTO COMERCIAL', 2025, 'HMEN_01') AS TOTAL FROM DUAL;
 
-SELECT NVL(FN_TOTAL_COSTOS_FICHA(NULL,1,1,'2026',115,15,0,10,11,0,0,30,25,10,'055'),0) AS CANTIDAD_OBRA FROM DUAL;
-SELECT NVL(FN_TOTAL_COSTOS_FICHA(NULL,2,1,'2026',115,15,0,10,11,0,0,30,25,10,'055'),0) AS CANTIDAD_OBRA FROM DUAL;
+SELECT NVL(FN_TOTAL_COSTOS_FICHA(NULL,1,1,'2026',100,115,15,0,10,11,0,0,30,25,10,'055'),0) AS CANTIDAD_OBRA FROM DUAL;
+SELECT NVL(FN_TOTAL_COSTOS_FICHA(NULL,2,1,'2026',100,115,15,0,10,11,0,0,30,25,10,'055'),0) AS CANTIDAD_OBRA FROM DUAL;
+
+TRUNCATE TABLE MR_TB_COSTO_DIRECTO_DETALLE;
+TRUNCATE TABLE MR_TB_TMP_LIQ_CAPITULOS;
+
+SELECT * FROM MR_TB_TMP_LIQ_CAPITULOS;
+SELECT * FROM MR_TB_COSTO_DIRECTO_DETALLE;
+
+DECLARE
+  v NUMBER;
+BEGIN
+  v := FN_TOTAL_COSTOS_FICHA(
+         p_codigo_actividad => NULL,
+         p_tipo_actividad   => 1,
+         p_tipo_presupuesto => 2,
+         p_vigencia         => 2025,
+         p_id_liquidacion   => 1001,
+         p_armazon          => 115,
+         p_area_uso         => 15
+         -- ...otros params...
+       );
+  DBMS_OUTPUT.PUT_LINE('Total = '||v);
+END;
 
 
 **********************************************************************/  
@@ -188,7 +221,8 @@ CREATE OR REPLACE FUNCTION FN_TOTAL_COSTOS_FICHA
     p_tipo_actividad			NUMBER,						-- 0:Otro , 1: Comercial , 2: Residencial
 	p_tipo_presupuesto          NUMBER, 					-- 1:presupuesto es independiente, 2: presupuesto predominante
     p_vigencia                  NUMBER,						-- vigencia
-    p_armazon                   NUMBER,         			-- parametro
+	p_id_liquidacion            NUMBER		DEFAULT NULL,	-- id_liquidacion
+    p_armazon                   NUMBER 		DEFAULT NULL,   -- parametro
     p_area_uso                  NUMBER 		DEFAULT NULL,	-- parametro
 	p_area_total_construida     NUMBER 		DEFAULT NULL,	-- parametro
 	p_frente               		NUMBER 		DEFAULT NULL,	-- parametro
@@ -208,7 +242,8 @@ CREATE OR REPLACE FUNCTION FN_TOTAL_COSTOS_FICHA
     p_cubierta_muros_acabados   NUMBER   	DEFAULT NULL,   -- parametro
     p_fachada_acabados          NUMBER   	DEFAULT NULL,   -- parametro
     p_mobiliario_baño           NUMBER   	DEFAULT NULL,   -- parametro
-    p_mobiliario_cocina         NUMBER   	DEFAULT NULL    -- parametro	
+    p_mobiliario_cocina         NUMBER   	DEFAULT NULL,   -- parametro	
+	p_complemento_industria     NUMBER      DEFAULT NULL    -- parametro
 ) RETURN NUMBER
 IS
     v_total 					NUMBER := 0;
@@ -217,11 +252,17 @@ IS
 	
 BEGIN
 
+	EXECUTE IMMEDIATE 'TRUNCATE TABLE MR_TB_TMP_LIQ_CAPITULOS';
+
+
     IF p_tipo_actividad = 1 THEN --1: COMERCIAL , 2: RESIDENCIAL
 	    
-		SELECT 
-		SUM(TTT.SUBTOTAL_ACT_OBRA)
-		INTO v_total		
+		INSERT INTO MR_TB_TMP_LIQ_CAPITULOS (ID_LIQUIDACION,CODIGO_FICHA,CAPITULO_OBRA, SUBTOTAL_CAPITULO)
+		SELECT
+		p_id_liquidacion,		
+		p_armazon,
+		TTT.CAPITULO_OBRA,
+		NVL(SUM(TTT.SUBTOTAL_ACT_OBRA),0) AS SUBTOTAL_ACT_OBRA
 		FROM 
 		(
 			SELECT 
@@ -230,8 +271,8 @@ BEGIN
 			SUM
 			(
 				CASE 
-					WHEN TT.CANT_HMEN IS NOT NULL THEN ROUND(TT.SUBTOTAL + (TT.SUBTOTAL * TT.CANT_HMEN),2)
-					ELSE ROUND(TT.SUBTOTAL,2)
+					WHEN TT.CANT_HMEN IS NOT NULL THEN ROUND(TT.SUBTOTAL + (TT.SUBTOTAL * TT.CANT_HMEN),14)
+					ELSE ROUND(TT.SUBTOTAL,14)
 				END
 			) AS COSTO_UNITARIO_ACT_OBRA,
 			SUM 
@@ -244,15 +285,15 @@ BEGIN
 				SUM
 				(
 					CASE 
-						WHEN TT.CANT_HMEN IS NOT NULL THEN ROUND(TT.SUBTOTAL + (TT.SUBTOTAL * TT.CANT_HMEN),2)
-						ELSE ROUND(TT.SUBTOTAL,2)
+						WHEN TT.CANT_HMEN IS NOT NULL THEN ROUND(TT.SUBTOTAL + (TT.SUBTOTAL * TT.CANT_HMEN),14)
+						ELSE ROUND(TT.SUBTOTAL,14)
 					END
 				) *
 				SUM 
 				(
 					TT.CANTIDAD_OBRA
 				)
-			,2) AS SUBTOTAL_ACT_OBRA
+			,14) AS SUBTOTAL_ACT_OBRA
 			FROM 
 			(
 				SELECT 
@@ -268,7 +309,8 @@ BEGIN
 					p_frente,p_fondo,p_grupo_uso_cantidades,					   
 					p_pisos_acabados, p_area_tipo_unidad_uso, p_n_unidades_uso_principal,
 					p_n_pisos, p_codigo_uso, p_n_sotanos, p_n_baños, p_n_cocinas, p_n_espacios,
-					p_m_muros, p_codigo_estrato, p_cubierta_muros_acabados, p_fachada_acabados, p_mobiliario_baño, p_mobiliario_cocina
+					p_m_muros, p_codigo_estrato, p_cubierta_muros_acabados, p_fachada_acabados, p_mobiliario_baño, p_mobiliario_cocina,
+					p_complemento_industria
 				) AS CANTIDAD_OBRA
 				FROM 
 				(
@@ -287,14 +329,18 @@ BEGIN
 				) T
 			 ) TT
 				GROUP BY  TT.ID_ACTIVIDAD_OBRA,TT.CAPITULO_OBRA
-			) TTT;			
+			) TTT
+			GROUP BY TTT.CAPITULO_OBRA;			
 		
 
     ELSIF p_tipo_actividad = 2 THEN --1: COMERCIAL , 2: RESIDENCIAL
 
-		SELECT 
-		SUM(TTT.SUBTOTAL_ACT_OBRA)
-		INTO v_total
+		INSERT INTO MR_TB_TMP_LIQ_CAPITULOS (ID_LIQUIDACION,CODIGO_FICHA,CAPITULO_OBRA, SUBTOTAL_CAPITULO)
+		SELECT
+		p_id_liquidacion,		
+		p_armazon,
+		TTT.CAPITULO_OBRA,
+		NVL(SUM(TTT.SUBTOTAL_ACT_OBRA),0) AS SUBTOTAL_ACT_OBRA
 		FROM 
 		(
 			SELECT 
@@ -303,8 +349,8 @@ BEGIN
 			SUM
 			(
 				CASE 
-					WHEN TT.CANT_HMEN IS NOT NULL THEN ROUND(TT.SUBTOTAL + (TT.SUBTOTAL * TT.CANT_HMEN),2)
-					ELSE ROUND(TT.SUBTOTAL,2)
+					WHEN TT.CANT_HMEN IS NOT NULL THEN ROUND(TT.SUBTOTAL + (TT.SUBTOTAL * TT.CANT_HMEN),14)
+					ELSE ROUND(TT.SUBTOTAL,14)
 				END
 			) AS COSTO_UNITARIO_ACT_OBRA,
 			SUM 
@@ -317,15 +363,15 @@ BEGIN
 				SUM
 				(
 					CASE 
-						WHEN TT.CANT_HMEN IS NOT NULL THEN ROUND(TT.SUBTOTAL + (TT.SUBTOTAL * TT.CANT_HMEN),2)
-						ELSE ROUND(TT.SUBTOTAL,2)
+						WHEN TT.CANT_HMEN IS NOT NULL THEN ROUND(TT.SUBTOTAL + (TT.SUBTOTAL * TT.CANT_HMEN),14)
+						ELSE ROUND(TT.SUBTOTAL,14)
 					END
 				) *
 				SUM 
 				(
 					TT.CANTIDAD_OBRA
 				)
-			,2) AS SUBTOTAL_ACT_OBRA
+			,14) AS SUBTOTAL_ACT_OBRA
 			FROM 
 			(
 				SELECT 
@@ -341,7 +387,8 @@ BEGIN
 					p_frente,p_fondo,p_grupo_uso_cantidades,					   
 					p_pisos_acabados, p_area_tipo_unidad_uso, p_n_unidades_uso_principal,
 					p_n_pisos, p_codigo_uso, p_n_sotanos, p_n_baños, p_n_cocinas, p_n_espacios,
-					p_m_muros, p_codigo_estrato, p_cubierta_muros_acabados, p_fachada_acabados, p_mobiliario_baño, p_mobiliario_cocina
+					p_m_muros, p_codigo_estrato, p_cubierta_muros_acabados, p_fachada_acabados, p_mobiliario_baño, p_mobiliario_cocina,
+					p_complemento_industria
 				) AS CANTIDAD_OBRA
 				FROM 
 				(
@@ -362,8 +409,17 @@ BEGIN
 				GROUP BY  TT.ID_ACTIVIDAD_OBRA,TT.CAPITULO_OBRA
 			) TTT;	
     END IF;
+	
+	SELECT ROUND(NVL(SUM(SUBTOTAL_CAPITULO),0),14) INTO v_total
+	FROM MR_TB_TMP_LIQ_CAPITULOS;
+	
+	INSERT INTO MR_TB_COSTO_DIRECTO_DETALLE (ID_LIQUIDACION, CODIGO_FICHA, CAPITULO_OBRA, SUBTOTAL_CAPITULO)
+	SELECT ID_LIQUIDACION, CODIGO_FICHA, CAPITULO_OBRA, SUBTOTAL_CAPITULO
+	FROM MR_TB_TMP_LIQ_CAPITULOS;
 
-    RETURN ROUND(NVL(v_total, 0), 2);
+	COMMIT; 
+
+    RETURN v_total;
 
 EXCEPTION
     WHEN OTHERS THEN
