@@ -41,7 +41,12 @@ CREATE OR REPLACE FUNCTION FN_EJECUTAR_REGLA_DINAMICA (
     p_cubierta_estructura       NUMBER      DEFAULT NULL,   -- parametro	
 	p_area_primer_piso          NUMBER      DEFAULT NULL,   -- parametro
 	p_tamaño_baño               NUMBER      DEFAULT NULL,   -- parametro
-	p_tamaño_cocina				NUMBER      DEFAULT NULL    -- parametro
+	p_tamaño_cocina				NUMBER      DEFAULT NULL,   -- parametro
+    p_estrato                   NUMBER   	DEFAULT NULL,   -- parametro
+    p_enchape_baño              NUMBER   	DEFAULT NULL,   -- parametro
+    p_enchape_cocina            NUMBER   	DEFAULT NULL    -- parametro
+	
+	
 	
 ) RETURN NUMBER
 IS
@@ -98,8 +103,10 @@ BEGIN
 	DBMS_OUTPUT.PUT_LINE('p_area_primer_piso: ' || p_area_primer_piso);
 	DBMS_OUTPUT.PUT_LINE('p_tamaño_baño: ' || p_tamaño_baño);
     DBMS_OUTPUT.PUT_LINE('p_tamaño_cocina: ' || p_tamaño_cocina);
+    DBMS_OUTPUT.PUT_LINE('p_estrato: ' || p_estrato);
+    DBMS_OUTPUT.PUT_LINE('p_enchape_baño: ' || p_enchape_baño);
+    DBMS_OUTPUT.PUT_LINE('p_enchape_cocina: ' || p_enchape_cocina);
 
-	
     
     --DBMS_OUTPUT.PUT_LINE('--- VARIABLES DE ENTRADA (2) ---');
     /*
@@ -151,6 +158,11 @@ BEGIN
 			AREA_PRIMER_PISO            NUMBER := :24;
             TAMAÑO_BAÑO                 NUMBER := :25;
             TAMAÑO_COCINA               NUMBER := :26;
+            ESTRATO                     NUMBER := :27; 
+            ENCHAPE_BAÑO                NUMBER := :28;
+            ENCHAPE_COCINA              NUMBER := :29;
+
+
 			RESULTADO                   NUMBER;
 			
         BEGIN
@@ -171,7 +183,8 @@ BEGIN
     USING p_armazon, p_area_uso, p_area_total_construida, p_frente, p_fondo, p_grupo_uso_cantidades, p_pisos_acabados, 
      p_area_tipo_unidad_uso, p_n_unidades_uso_principal, p_n_pisos, p_codigo_uso, p_n_sotanos, p_n_baños, p_n_cocinas, p_n_espacios,
      p_m_muros, p_codigo_estrato, p_cubierta_muros_acabados, p_fachada_acabados, p_mobiliario_baño, p_mobiliario_cocina, 
-	 p_complemento_industria, p_cubierta_estructura,p_area_primer_piso, p_tamaño_baño, p_tamaño_cocina,
+	 p_complemento_industria, p_cubierta_estructura,p_area_primer_piso, p_tamaño_baño, p_tamaño_cocina, p_estrato, p_enchape_baño,
+	 p_enchape_cocina,
      OUT v_resultado;
 
 
@@ -258,7 +271,8 @@ CREATE OR REPLACE FUNCTION FN_TOTAL_COSTOS_FICHA
 	p_area_primer_piso          NUMBER      DEFAULT NULL,   -- parametro
 	p_tamaño_baño               NUMBER      DEFAULT NULL,   -- parametro
 	p_tamaño_cocina				NUMBER      DEFAULT NULL,   -- parametro
-    p_enchape_bano				NUMBER      DEFAULT NULL,   -- parametro
+    p_estrato                   NUMBER   	DEFAULT NULL,   -- parametro
+	p_enchape_bano				NUMBER      DEFAULT NULL,   -- parametro
     p_enchape_cocina			NUMBER      DEFAULT NULL    -- parametro
 
 ) RETURN NUMBER
@@ -327,7 +341,7 @@ BEGIN
 				SELECT 
 				T.CAPITULO_OBRA, 
 				T.ID_ACTIVIDAD_OBRA, 
-				T.CODIGO_FICHA, 
+				MIN(T.CODIGO_FICHA) AS CODIGO_FICHA, 
 				T.SUBTOTAL, 
 				T.CANT_HMEN,
 				FN_EJECUTAR_REGLA_DINAMICA
@@ -338,7 +352,7 @@ BEGIN
 					p_pisos_acabados, p_area_tipo_unidad_uso, p_n_unidades_uso_principal,
 					p_n_pisos, p_codigo_uso, p_n_sotanos, p_n_baños, p_n_cocinas, p_n_espacios,
 					p_m_muros, p_codigo_estrato, p_cubierta_muros_acabados, p_fachada_acabados, p_mobiliario_baño, p_mobiliario_cocina,
-					p_complemento_industria,p_cubierta_estructura,p_area_primer_piso,p_tamaño_baño,p_tamaño_cocina
+					p_complemento_industria,p_cubierta_estructura,p_area_primer_piso,p_tamaño_baño,p_tamaño_cocina, p_estrato, p_enchape_bano, p_enchape_cocina
 				) AS CANTIDAD_OBRA,
 				p_tipo_presupuesto AS TIPO_PRESUPUESTO
 				FROM 
@@ -364,6 +378,7 @@ BEGIN
 					--AND CF.ID_ACTIVIDAD_OBRA = 'PRELIM_01'
 					GROUP BY AOM.CAPITULO_OBRA,CF.ID_ACTIVIDAD_OBRA, CF.VIGENCIA, CF.CODIGO_FICHA
 				) T
+				GROUP BY T.CAPITULO_OBRA,T.ID_ACTIVIDAD_OBRA,T.VIGENCIA,T.SUBTOTAL,T.CANT_HMEN
 			 ) TT
 				GROUP BY  TT.ID_ACTIVIDAD_OBRA,TT.CAPITULO_OBRA,TT.TIPO_PRESUPUESTO
 			) TTT
@@ -419,7 +434,7 @@ BEGIN
 				SELECT 
 				T.CAPITULO_OBRA, 
 				T.ID_ACTIVIDAD_OBRA, 
-				T.CODIGO_FICHA, 
+				MIN(T.CODIGO_FICHA) AS CODIGO_FICHA, 
 				T.SUBTOTAL, 
 				T.CANT_HMEN,
 				FN_EJECUTAR_REGLA_DINAMICA
@@ -430,7 +445,7 @@ BEGIN
 					p_pisos_acabados, p_area_tipo_unidad_uso, p_n_unidades_uso_principal,
 					p_n_pisos, p_codigo_uso, p_n_sotanos, p_n_baños, p_n_cocinas, p_n_espacios,
 					p_m_muros, p_codigo_estrato, p_cubierta_muros_acabados, p_fachada_acabados, p_mobiliario_baño, p_mobiliario_cocina,
-					p_complemento_industria,p_cubierta_estructura,p_area_primer_piso,p_tamaño_baño,p_tamaño_cocina
+					p_complemento_industria,p_cubierta_estructura,p_area_primer_piso,p_tamaño_baño,p_tamaño_cocina,p_estrato, p_enchape_bano, p_enchape_cocina
 				) AS CANTIDAD_OBRA,
 				p_tipo_presupuesto AS TIPO_PRESUPUESTO
 				FROM 
@@ -456,6 +471,7 @@ BEGIN
 					--AND CF.ID_ACTIVIDAD_OBRA = 'PRELIM_01'
 					GROUP BY AOM.CAPITULO_OBRA,CF.ID_ACTIVIDAD_OBRA, CF.VIGENCIA, CF.CODIGO_FICHA
 				) T
+				GROUP BY T.CAPITULO_OBRA,T.ID_ACTIVIDAD_OBRA,T.VIGENCIA,T.SUBTOTAL,T.CANT_HMEN
 			 ) TT
 				GROUP BY  TT.ID_ACTIVIDAD_OBRA,TT.CAPITULO_OBRA,TT.TIPO_PRESUPUESTO
 			) TTT

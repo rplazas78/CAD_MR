@@ -117,13 +117,13 @@ BEGIN
         ELSIF p_grupo_uso_cantidades = 5 THEN
             RETURN CEIL(p_area_uso / 2000);
         ELSIF p_grupo_uso_cantidades = 6 THEN
-            RETURN CEIL(p_area_uso / 15);
+            RETURN ROUND(p_area_uso / 15);
         ELSIF p_grupo_uso_cantidades = 8 THEN
-            RETURN CEIL((p_area_uso / 65) + 1);
+            RETURN FLOOR((p_area_uso / 65) + 1);
         ELSIF p_grupo_uso_cantidades = 7 AND p_area_uso > 500 THEN
-            RETURN CEIL(p_area_uso / 69);
+            RETURN ROUND(p_area_uso / 69);
         ELSIF p_grupo_uso_cantidades = 9 AND p_area_uso > 500 THEN
-            RETURN CEIL(p_area_uso / 24);
+            RETURN ROUND(p_area_uso / 24);
 		ELSIF p_area_uso = 0 THEN
 			RETURN 0;
 		ELSIF p_area_uso <= 35 THEN
@@ -141,15 +141,15 @@ BEGIN
 		ELSIF p_area_uso > 400 AND p_area_uso <= 500 THEN
 			RETURN 7;
 		ELSIF p_area_uso > 500 AND p_codigo_uso IN ('001','002') AND p_codigo_estrato IN (1,2) THEN
-			RETURN CEIL(p_area_uso / 45);
+			RETURN ROUND(p_area_uso / 45);
 		ELSIF p_area_uso > 500 AND p_codigo_uso IN ('001','002') AND p_codigo_estrato = 3 THEN
-			RETURN CEIL(p_area_uso / 48);
+			RETURN ROUND(p_area_uso / 48);
 		ELSIF p_area_uso > 500 AND p_codigo_uso IN ('001','002') AND p_codigo_estrato = 4 THEN
-			RETURN CEIL(p_area_uso / 64);
+			RETURN ROUND(p_area_uso / 64);
 		ELSIF p_area_uso > 500 AND p_codigo_uso IN ('001','002') AND p_codigo_estrato = 5 THEN
-			RETURN CEIL(p_area_uso / 80);
+			RETURN ROUND(p_area_uso / 80);
 		ELSIF p_area_uso > 500 AND p_codigo_uso IN ('001','002') AND p_codigo_estrato = 6 THEN
-			RETURN CEIL(p_area_uso / 110);
+			RETURN ROUND(p_area_uso / 110);
         ELSE
             RETURN p_n_pisos;
         END IF;
@@ -167,13 +167,13 @@ BEGIN
         ELSIF p_grupo_uso_cantidades = 5 THEN
             RETURN CEIL(p_area_uso / 2000);
         ELSIF p_grupo_uso_cantidades = 6 THEN
-            RETURN CEIL(p_area_uso / 15);
+            RETURN ROUND(p_area_uso / 15);
         ELSIF p_grupo_uso_cantidades = 8 THEN
-            RETURN CEIL((p_area_uso / 65) + 1);
+            RETURN FLOOR((p_area_uso / 65) + 1);
         ELSIF p_grupo_uso_cantidades = 7 AND p_area_uso > 500 THEN
-            RETURN CEIL(p_area_uso / 69);
+            RETURN ROUND(p_area_uso / 69);
         ELSIF p_grupo_uso_cantidades = 9 AND p_area_uso > 500 THEN
-            RETURN CEIL(p_area_uso / 24);
+            RETURN ROUND(p_area_uso / 24);
 		ELSIF p_area_uso = 0 THEN
 			RETURN 0;
 		ELSIF p_area_uso <= 35 THEN
@@ -191,15 +191,15 @@ BEGIN
 		ELSIF p_area_uso > 400 AND p_area_uso <= 500 THEN
 			RETURN 7;
 		ELSIF p_area_uso > 500 AND p_codigo_uso IN ('001','002') AND p_codigo_estrato IN (1,2) THEN
-			RETURN CEIL(p_area_uso / 45);
+			RETURN ROUND(p_area_uso / 45);
 		ELSIF p_area_uso > 500 AND p_codigo_uso IN ('001','002') AND p_codigo_estrato = 3 THEN
-			RETURN CEIL(p_area_uso / 48);
+			RETURN ROUND(p_area_uso / 48);
 		ELSIF p_area_uso > 500 AND p_codigo_uso IN ('001','002') AND p_codigo_estrato = 4 THEN
-			RETURN CEIL(p_area_uso / 64);
+			RETURN ROUND(p_area_uso / 64);
 		ELSIF p_area_uso > 500 AND p_codigo_uso IN ('001','002') AND p_codigo_estrato = 5 THEN
-			RETURN CEIL(p_area_uso / 80);
+			RETURN ROUND(p_area_uso / 80);
 		ELSIF p_area_uso > 500 AND p_codigo_uso IN ('001','002') AND p_codigo_estrato = 6 THEN
-			RETURN CEIL(p_area_uso / 110);
+			RETURN ROUND(p_area_uso / 110);
         ELSE
             RETURN p_n_pisos;
         END IF;
@@ -266,16 +266,16 @@ BEGIN
     -- 7. N_ESPACIOS   => 1:PRESUPUESTO INDEPENDIENTE
     ELSIF p_variable = 'N_ESPACIOS' AND p_tipo_presupuesto = 1  THEN
         IF p_grupo_uso_cantidades = 2 AND p_codigo_uso IN ('003', '004') THEN
-            RETURN ROUND(CEIL(p_area_uso / 41),2);
+            RETURN CEIL(p_area_uso / 41);
         ELSIF p_grupo_uso_cantidades = 2 AND p_codigo_uso NOT IN ('003', '004') THEN
             RETURN 1;
-        ELSIF p_grupo_uso_cantidades = 3 THEN RETURN ROUND(CEIL(p_area_uso / 1000),2);
-        ELSIF p_grupo_uso_cantidades = 4 THEN RETURN ROUND(CEIL(p_area_uso / 1500),2);
-        ELSIF p_grupo_uso_cantidades = 5 THEN RETURN ROUND(CEIL(p_area_uso / 2000),2);
+        ELSIF p_grupo_uso_cantidades = 3 THEN RETURN CEIL(p_area_uso / 1000);
+        ELSIF p_grupo_uso_cantidades = 4 THEN RETURN CEIL(p_area_uso / 1500);
+        ELSIF p_grupo_uso_cantidades = 5 THEN RETURN CEIL(p_area_uso / 2000);
         ELSIF p_grupo_uso_cantidades = 6 THEN RETURN ROUND(p_area_uso / 15);
         ELSIF p_grupo_uso_cantidades = 8 THEN RETURN FLOOR(p_area_uso / 65) + 1;
-        ELSIF p_grupo_uso_cantidades = 7 AND p_area_uso > 500 THEN RETURN ROUND(CEIL(p_area_uso / 69),2);
-        ELSIF p_grupo_uso_cantidades = 9 AND p_area_uso > 500 THEN RETURN ROUND(CEIL(p_area_uso / 24),2);
+        ELSIF p_grupo_uso_cantidades = 7 AND p_area_uso > 500 THEN RETURN ROUND(p_area_uso / 69);
+        ELSIF p_grupo_uso_cantidades = 9 AND p_area_uso > 500 THEN RETURN ROUND(p_area_uso / 24);
         ELSIF p_area_uso = 0 	THEN RETURN 0;
         ELSIF p_area_uso <= 35 	THEN RETURN 1;
         ELSIF p_area_uso <= 50 	THEN RETURN 2;
@@ -295,16 +295,16 @@ BEGIN
     -- 7. N_ESPACIOS   => 2:PRESUPUESTO PREDOMINANTE
     ELSIF p_variable = 'N_ESPACIOS' AND p_tipo_presupuesto = 2  THEN
         IF p_grupo_uso_cantidades = 2 AND p_codigo_uso IN ('003', '004') THEN
-            RETURN ROUND(CEIL(p_area_uso / 41),2);
+            RETURN CEIL(p_area_uso / 41);
         ELSIF p_grupo_uso_cantidades = 2 AND p_codigo_uso NOT IN ('003', '004') THEN
             RETURN 1;
-        ELSIF p_grupo_uso_cantidades = 3 THEN RETURN ROUND(CEIL(p_area_uso / 1000),2);
-        ELSIF p_grupo_uso_cantidades = 4 THEN RETURN ROUND(CEIL(p_area_uso / 1500),2);
-        ELSIF p_grupo_uso_cantidades = 5 THEN RETURN ROUND(CEIL(p_area_uso / 2000),2);
+        ELSIF p_grupo_uso_cantidades = 3 THEN RETURN CEIL(p_area_uso / 1000);
+        ELSIF p_grupo_uso_cantidades = 4 THEN RETURN CEIL(p_area_uso / 1500);
+        ELSIF p_grupo_uso_cantidades = 5 THEN RETURN CEIL(p_area_uso / 2000);
         ELSIF p_grupo_uso_cantidades = 6 THEN RETURN ROUND(p_area_uso / 15);
         ELSIF p_grupo_uso_cantidades = 8 THEN RETURN FLOOR(p_area_uso / 65) + 1;
-        ELSIF p_grupo_uso_cantidades = 7 AND p_area_uso > 500 THEN RETURN ROUND(CEIL(p_area_uso / 69),2);
-        ELSIF p_grupo_uso_cantidades = 9 AND p_area_uso > 500 THEN RETURN ROUND(CEIL(p_area_uso / 24),2);
+        ELSIF p_grupo_uso_cantidades = 7 AND p_area_uso > 500 THEN RETURN ROUND(p_area_uso / 69);
+        ELSIF p_grupo_uso_cantidades = 9 AND p_area_uso > 500 THEN RETURN ROUND(p_area_uso / 24);
         ELSIF p_area_uso = 0 	THEN RETURN 0;
         ELSIF p_area_uso <= 35 	THEN RETURN 1;
         ELSIF p_area_uso <= 50 	THEN RETURN 2;
@@ -325,7 +325,7 @@ BEGIN
     ELSIF p_variable = 'N_BAÑOS' AND p_tipo_presupuesto = 1  THEN
         IF p_grupo_uso_cantidades = 6 		THEN RETURN ROUND(p_area_uso / 15);
         ELSIF p_grupo_uso_cantidades = 8 	THEN RETURN FLOOR(p_area_uso / 65) + 1;
-		ELSIF p_grupo_uso_cantidades = 2    THEN RETURN FN_EJECUTAR_REGLA_CALCULO('N_UNIDADES_USO_PRINCIPAL', p_grupo_uso_cantidades, p_codigo_uso, p_codigo_estrato, p_area_uso, p_n_pisos);
+		ELSIF p_grupo_uso_cantidades = 2    THEN RETURN FN_EJECUTAR_REGLA_CALCULO('N_UNIDADES_USO_PRINCIPAL', p_tipo_presupuesto,p_grupo_uso_cantidades, p_codigo_uso, p_codigo_estrato, p_area_uso, p_n_pisos);
         ELSIF p_grupo_uso_cantidades IN (3,4,5) THEN RETURN 1;
         ELSIF p_grupo_uso_cantidades IN (7,9) THEN
             v_resultado := FN_EJECUTAR_REGLA_CALCULO('N_UNIDADES_USO',p_tipo_presupuesto, p_grupo_uso_cantidades, p_codigo_uso, p_codigo_estrato, p_area_uso, p_n_pisos);
@@ -351,7 +351,7 @@ BEGIN
     ELSIF p_variable = 'N_BAÑOS' AND p_tipo_presupuesto = 2  THEN
         IF p_grupo_uso_cantidades = 6 		THEN RETURN ROUND(p_area_uso / 15);
         ELSIF p_grupo_uso_cantidades = 8 	THEN RETURN FLOOR(p_area_uso / 65) + 1;
-        ELSIF p_grupo_uso_cantidades = 2    THEN RETURN FN_EJECUTAR_REGLA_CALCULO('N_UNIDADES_USO_PRINCIPAL', p_grupo_uso_cantidades, p_codigo_uso, p_codigo_estrato, p_area_uso, p_n_pisos);
+        ELSIF p_grupo_uso_cantidades = 2    THEN RETURN FN_EJECUTAR_REGLA_CALCULO('N_UNIDADES_USO_PRINCIPAL', p_tipo_presupuesto,p_grupo_uso_cantidades, p_codigo_uso, p_codigo_estrato, p_area_uso, p_n_pisos);
         ELSIF p_grupo_uso_cantidades IN (3,4,5) THEN RETURN 1;
         ELSIF p_grupo_uso_cantidades IN (7,9) THEN
             v_resultado := FN_EJECUTAR_REGLA_CALCULO('N_UNIDADES_USO',p_tipo_presupuesto, p_grupo_uso_cantidades, p_codigo_uso, p_codigo_estrato, p_area_uso, p_n_pisos);
