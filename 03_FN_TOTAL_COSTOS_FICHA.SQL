@@ -47,7 +47,6 @@ CREATE OR REPLACE FUNCTION FN_EJECUTAR_REGLA_DINAMICA (
     p_enchape_cocina            NUMBER   	DEFAULT NULL    -- parametro
 	
 	
-	
 ) RETURN NUMBER
 IS
     v_formula                   VARCHAR2(4000);
@@ -107,22 +106,6 @@ BEGIN
     DBMS_OUTPUT.PUT_LINE('p_enchape_baño: ' || p_enchape_baño);
     DBMS_OUTPUT.PUT_LINE('p_enchape_cocina: ' || p_enchape_cocina);
 
-    
-    --DBMS_OUTPUT.PUT_LINE('--- VARIABLES DE ENTRADA (2) ---');
-    /*
-	IF p_codigo_actividad IN ('PRELIM_01', 'PRELIM_02', 'PRELIM_12')  THEN
-        IF p_tipo_presupuesto = 1 THEN
-            v_area_uso := p_valor;
-            DBMS_OUTPUT.PUT_LINE('AREA_USO = ' || v_area_uso);
-        ELSIF p_tipo_presupuesto = 2 THEN
-            v_area_total_construida := p_valor;
-            DBMS_OUTPUT.PUT_LINE('AREA_TOTAL_CONSTRUIDA = ' || v_area_total_construida);
-        END IF;
-    END IF;
-	*/
-
-    ---DBMS_OUTPUT.PUT_LINE('FRENTE             = ' || p_frente);
-    ---DBMS_OUTPUT.PUT_LINE('FONDO              = ' || p_fondo);
 
     -- Mostrar fórmula y condición
     DBMS_OUTPUT.PUT_LINE('--- CONDICIÓN Y FÓRMULA ---');
@@ -184,7 +167,7 @@ BEGIN
      p_area_tipo_unidad_uso, p_n_unidades_uso_principal, p_n_pisos, p_codigo_uso, p_n_sotanos, p_n_baños, p_n_cocinas, p_n_espacios,
      p_m_muros, p_codigo_estrato, p_cubierta_muros_acabados, p_fachada_acabados, p_mobiliario_baño, p_mobiliario_cocina, 
 	 p_complemento_industria, p_cubierta_estructura,p_area_primer_piso, p_tamaño_baño, p_tamaño_cocina, p_estrato, p_enchape_baño,
-	 p_enchape_cocina,
+	 p_enchape_cocina, 
      OUT v_resultado;
 
 
