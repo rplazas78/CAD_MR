@@ -164,7 +164,7 @@ BEGIN
     -- Ejecutar el bloque
     EXECUTE IMMEDIATE v_sql
     USING p_armazon, p_area_uso, p_area_total_construida, p_frente, p_fondo, p_grupo_uso_cantidades, p_pisos_acabados, 
-     p_area_tipo_unidad_uso, p_n_unidades_uso_principal, p_n_pisos, p_codigo_uso, p_n_sotanos, p_n_baños, p_n_cocinas, p_n_espacios,
+     p_area_tipo_unidad_uso, p_n_unidades_uso_principal, p_n_pisos, p_codigo_uso, NVL(p_n_sotanos,0), p_n_baños, p_n_cocinas, p_n_espacios,
      p_m_muros, p_codigo_estrato, p_cubierta_muros_acabados, p_fachada_acabados, p_mobiliario_baño, p_mobiliario_cocina, 
 	 p_complemento_industria, p_cubierta_estructura,p_area_primer_piso, p_tamaño_baño, p_tamaño_cocina, p_estrato, p_enchape_baño,
 	 p_enchape_cocina, 
